@@ -1,0 +1,47 @@
+@model PhotoViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<p>
+    <a asp-action="Create">Upload a new Image</a>
+</p>
+
+<h2>Raw Images</h2>
+    <div class="row">
+        <div class="col-sm-6 col-md-4">
+        @foreach (var item in Model.Unprocessed) {
+
+            <div class="thumbnail">
+                <img src="@item.RawUrl">
+                <div class="caption">
+                    <h3>@item.Title</h3>
+                    <p>
+                        <a class="btn btn-primary"  asp-action="Details" asp-route-id="@item.ID" role="button">Details</a>
+                        <a class="btn btn-danger"  asp-action="Delete" asp-route-id="@item.ID" role="button">Delete</a>
+                    </p>
+                </div>
+            </div>
+        }
+        </div>
+    </div>
+
+<h2>Processed Images</h2>
+     <div class="row">
+        <div class="col-sm-6 col-md-4">
+        @foreach (var item in Model.Processed) {
+
+            <div class="thumbnail">
+                <img src="@item.ProcessedUrl">
+                <div class="caption">
+                    <h3>@item.Title</h3>
+                    <p>
+                        <a class="btn btn-primary"  asp-action="Details" asp-route-id="@item.ID" role="button">Details</a>
+                        <a class="btn btn-danger"  asp-action="Delete" asp-route-id="@item.ID" role="button">Delete</a>
+                    </p>
+                </div>
+            </div>
+        }
+        </div>
+    </div>

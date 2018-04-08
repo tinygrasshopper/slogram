@@ -5,14 +5,13 @@
 }
 
 <p>
-    <a asp-action="Create">Upload a new Image</a>
+    <a class="btn btn-default " asp-action="Create"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Upload a new Image</a>
 </p>
 
 <h2>Raw Images</h2>
     <div class="row">
-        <div class="col-sm-6 col-md-4">
         @foreach (var item in Model.Unprocessed) {
-
+        <div class="col-sm-6 col-md-4">
             <div class="thumbnail">
                 <img src="@item.RawUrl">
                 <div class="caption">
@@ -23,14 +22,14 @@
                     </p>
                 </div>
             </div>
+         </div>
         }
-        </div>
     </div>
 
 <h2>Processed Images</h2>
      <div class="row">
-        <div class="col-sm-6 col-md-4">
         @foreach (var item in Model.Processed) {
+        <div class="col-sm-6 col-md-4">
 
             <div class="thumbnail">
                 <img src="@item.ProcessedUrl">
@@ -42,6 +41,6 @@
                     </p>
                 </div>
             </div>
-        }
         </div>
+        }
     </div>

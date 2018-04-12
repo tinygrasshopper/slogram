@@ -47,6 +47,12 @@ namespace slogram
                     name: "default",
                     template: "{controller=Photos}/{action=Index}/{id?}");
             });
+
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                var context = serviceScope.ServiceProvider.GetRequiredService<MvcPhotoContext>();
+                context.Database.Migrate();
+            }
         }
     }
 }

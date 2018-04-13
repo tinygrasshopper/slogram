@@ -12,6 +12,6 @@ using slogram.Models;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=MvcMovie.db");
+            optionsBuilder.UseSqlite("Data Source=Photos.db");
         }
     }

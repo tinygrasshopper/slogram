@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Steeltoe.Extensions.Configuration.CloudFoundry;
 
 namespace slogram
 {
@@ -19,6 +20,7 @@ namespace slogram
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
                 .UseUrls("http://0.0.0.0:9000")
+                .AddCloudFoundry()
                 .Build();
 
             hostBuilder.Run();

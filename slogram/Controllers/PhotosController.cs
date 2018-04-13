@@ -24,7 +24,6 @@ namespace slogram.Controllers
         private readonly MvcPhotoContext _context;
         private readonly IHostingEnvironment _hostingEnvironment;
 
-
         public PhotosController(MvcPhotoContext context, IHostingEnvironment hostingEnvironment)
         {
             _context = context;
@@ -99,7 +98,9 @@ namespace slogram.Controllers
         {
             Thread.Sleep(5000);
 
-            using (var db = new MvcPhotoContext())
+            var optionsBuilder = new DbContextOptionsBuilder<MvcPhotoContext>();
+
+            using (var db = new MvcPhotoContext(optionsBuilder.Options))
             {
                 var photo = db.Find<Photo>(photoId);
                 var savedImageFullPath = Path.Combine(Path.Combine(rootPath, photo.RawUrl));

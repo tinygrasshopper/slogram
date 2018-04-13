@@ -64,7 +64,7 @@ namespace slogram.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Title,Processed,RawUrl,ProcessedUrl")] Photo photo, IFormFile file)
+        public async Task<IActionResult> Create([Bind("ID,Title,Processed,RawUrl,ProcessedUrl,Guid")] Photo photo, IFormFile file)
         {
             if (ModelState.IsValid)
             {
@@ -74,9 +74,10 @@ namespace slogram.Controllers
 
                 var savedImageFullPath = Path.Combine(Path.Combine(_hostingEnvironment.WebRootPath, savedImagePath));
                 var processedFullPath = Path.Combine(Path.Combine(_hostingEnvironment.WebRootPath, processedImagePath));
+
+                photo.Guid = imageGuid;
                 photo.RawUrl = savedImagePath;
                 photo.ProcessedUrl = processedImagePath;
-
 
                 FileStream fileStream = new FileStream(savedImageFullPath, FileMode.OpenOrCreate);
                 file.CopyTo(fileStream);
@@ -137,7 +138,7 @@ namespace slogram.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Title,Processed,RawUrl,ProcessedUrl")] Photo photo)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Title,Processed,RawUrl,ProcessedUrl,Guid")] Photo photo)
         {
             if (id != photo.ID)
             {

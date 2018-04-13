@@ -17,7 +17,8 @@ namespace slogram.Migrations
                     Processed = table.Column<bool>(type: "INTEGER", nullable: false),
                     ProcessedUrl = table.Column<string>(type: "TEXT", nullable: true),
                     RawUrl = table.Column<string>(type: "TEXT", nullable: true),
-                    Title = table.Column<string>(type: "TEXT", nullable: true)
+                    Title = table.Column<string>(type: "TEXT", nullable: true),
+                    Guid = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

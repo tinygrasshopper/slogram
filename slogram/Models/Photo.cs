@@ -8,6 +8,7 @@ namespace slogram.Models
         public bool Processed{ get; set; }
         public string RawUrl { get; set; }
         public string ProcessedUrl { get; set; }
+        public string Guid { get; set; }
 
         public Photo()
         {

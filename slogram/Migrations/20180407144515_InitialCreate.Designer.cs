@@ -30,6 +30,8 @@ namespace slogram.Migrations
 
                     b.Property<string>("RawUrl");
 
+                    b.Property<string>("Guid");
+
                     b.Property<string>("Title");
 
                     b.HasKey("ID");

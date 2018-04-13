@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -86,14 +88,14 @@ namespace slogram.Controllers
                 _context.Add(photo);
                 await _context.SaveChangesAsync();
 
-                Task.Run(() => ProcessImage(photo.ID, _hostingEnvironment.WebRootPath));
+                Task.Run(() => ProcessImageAsync(photo.ID, _hostingEnvironment.WebRootPath));
 
                 return RedirectToAction(nameof(Index));
             }
             return View(photo);
         }
 
-        public static void ProcessImage(int photoId, string rootPath)
+        public static async void ProcessImageAsync(int photoId, string rootPath)
         {
             Thread.Sleep(5000);
 
@@ -103,13 +105,47 @@ namespace slogram.Controllers
                 var savedImageFullPath = Path.Combine(Path.Combine(rootPath, photo.RawUrl));
                 var processedFullPath = Path.Combine(Path.Combine(rootPath, photo.ProcessedUrl));
 
-
                 using (Image<Rgba32> image = Image.Load(savedImageFullPath))
                 {
                     image.Mutate(ctx => ctx.Polaroid());
 
                     image.Save(processedFullPath); // Automatic encoder selected based on extension.
                 }
+
+                // ================================================================================================
+                // Start azure upload
+
+                CloudStorageAccount storageAccount = null;
+                CloudBlobContainer cloudBlobContainer = null;
+
+                string storageConnectionString = Environment.GetEnvironmentVariable("storageconnectionstring");
+
+                if (CloudStorageAccount.TryParse(storageConnectionString, out storageAccount))
+                {
+                    try
+                    {
+                        CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
+                        cloudBlobContainer = cloudBlobClient.GetContainerReference("slogramblobcontainer");
+
+                        CloudBlockBlob cloudBlockBlob = cloudBlobContainer.GetBlockBlobReference(photo.Guid);
+                        await cloudBlockBlob.UploadFromFileAsync(processedFullPath);
+                    }
+                    catch (StorageException ex)
+                    {
+                        Console.WriteLine("Error returned from the service: {0}", ex.Message);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(
+                        "A connection string has not been defined in the system environment variables. " +
+                        "Add a environment variable named 'storageconnectionstring' with your storage " +
+                        "connection string as a value.");
+                }
+
+                // End azure upload
+                // ================================================================================================
+
 
                 photo.Processed = true;
                 db.Update(photo);

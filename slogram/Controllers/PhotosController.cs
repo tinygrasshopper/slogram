@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -78,8 +79,12 @@ namespace slogram.Controllers
                 var processedFullPath = Path.Combine(Path.Combine(_hostingEnvironment.WebRootPath, processedImagePath));
 
                 photo.Guid = imageGuid;
-                photo.RawUrl = savedImagePath;
-                photo.ProcessedUrl = processedImagePath;
+
+                var oldBlob = AzureBlob(photo.Guid + "unprocessed");
+                //oldBlob.StartCopyAsync()
+                await oldBlob.UploadFromStreamAsync(file.OpenReadStream());
+
+                photo.RawUrl = oldBlob.StorageUri.PrimaryUri.AbsoluteUri;
 
                 FileStream fileStream = new FileStream(savedImageFullPath, FileMode.OpenOrCreate);
                 file.CopyTo(fileStream);
@@ -88,22 +93,28 @@ namespace slogram.Controllers
                 _context.Add(photo);
                 await _context.SaveChangesAsync();
 
-                Task.Run(() => ProcessImageAsync(photo.ID, _hostingEnvironment.WebRootPath));
+                Task.Run(() => ProcessImageAsync(photo.ID));
 
                 return RedirectToAction(nameof(Index));
             }
             return View(photo);
         }
 
-        public static async void ProcessImageAsync(int photoId, string rootPath)
+        public static async void ProcessImageAsync(int photoId)
         {
             Thread.Sleep(5000);
+            var guid = Guid.NewGuid().ToString();
+            var rootPath = Path.GetTempPath();
+            var savedImageFullPath = Path.Combine(Path.Combine(rootPath, guid+ "unprocessed"));
+            var processedFullPath = Path.Combine(Path.Combine(rootPath, guid+ "processed.jpg"));
+
+
 
             using (var db = new MvcPhotoContext())
             {
                 var photo = db.Find<Photo>(photoId);
-                var savedImageFullPath = Path.Combine(Path.Combine(rootPath, photo.RawUrl));
-                var processedFullPath = Path.Combine(Path.Combine(rootPath, photo.ProcessedUrl));
+                var oldBlob = AzureBlob(photo.Guid + "unprocessed");
+                await oldBlob.DownloadToFileAsync(savedImageFullPath, FileMode.Create);
 
                 using (Image<Rgba32> image = Image.Load(savedImageFullPath))
                 {
@@ -112,45 +123,22 @@ namespace slogram.Controllers
                     image.Save(processedFullPath); // Automatic encoder selected based on extension.
                 }
 
-                // ================================================================================================
-                // Start azure upload
+                var newBlob = AzureBlob(photo.Guid + "processed");
+                await newBlob.UploadFromFileAsync(processedFullPath);
 
-                CloudStorageAccount storageAccount = null;
-                CloudBlobContainer cloudBlobContainer = null;
-
-                string storageConnectionString = Environment.GetEnvironmentVariable("storageconnectionstring");
-
-                if (CloudStorageAccount.TryParse(storageConnectionString, out storageAccount))
-                {
-                    try
-                    {
-                        CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
-                        cloudBlobContainer = cloudBlobClient.GetContainerReference("slogramblobcontainer");
-
-                        CloudBlockBlob cloudBlockBlob = cloudBlobContainer.GetBlockBlobReference(photo.Guid);
-                        await cloudBlockBlob.UploadFromFileAsync(processedFullPath);
-                    }
-                    catch (StorageException ex)
-                    {
-                        Console.WriteLine("Error returned from the service: {0}", ex.Message);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine(
-                        "A connection string has not been defined in the system environment variables. " +
-                        "Add a environment variable named 'storageconnectionstring' with your storage " +
-                        "connection string as a value.");
-                }
-
-                // End azure upload
-                // ================================================================================================
-
-
+                photo.ProcessedUrl = newBlob.StorageUri.PrimaryUri.AbsoluteUri;
                 photo.Processed = true;
                 db.Update(photo);
                 db.SaveChanges();
             }
+        }
+
+        public static CloudBlockBlob AzureBlob(string blobpath)  {
+            var cloudStorageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("storageconnectionstring"));
+            var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
+
+            var container = cloudBlobClient.GetContainerReference("slogramblobcontainer");
+            return container.GetBlockBlobReference(blobpath);
         }
 
         // GET: Photos/Edit/5

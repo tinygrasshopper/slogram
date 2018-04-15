@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Steeltoe.Extensions.Configuration.CloudFoundry;
 
 namespace slogram
 {
@@ -16,9 +17,15 @@ namespace slogram
         {
             var hostBuilder = new WebHostBuilder()
                 .UseKestrel()
+                .UseCloudFoundryHosting()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
-                .UseUrls("http://0.0.0.0:9000")
+                //.UseUrls("http://0.0.0.0:9000")
+                .ConfigureLogging((context, builder) =>
+                {
+                    builder.AddConfiguration(context.Configuration.GetSection("Logging"));
+                    builder.AddConsole(); //This is for cf
+                })
                 .Build();
 
             hostBuilder.Run();

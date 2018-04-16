@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
+using slogram.Adapters;
 
 namespace slogram
 {
@@ -23,6 +25,8 @@ namespace slogram
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            services.AddDataProtection()
+                    .PersistKeysToAzureBlobStorage(Azure.Blob("encrypt_token"));
 
             services.AddDbContext<MvcPhotoContext>();
         }

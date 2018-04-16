@@ -27,6 +27,7 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="wwwroot\images\uploads\" />
+    <Folder Include="Adapters\" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Views\Home\About.cshtml" />

@@ -16,6 +16,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Filters;
+using slogram.Adapters;
 using slogram.Models;
 
 namespace slogram.Controllers
@@ -80,7 +81,7 @@ namespace slogram.Controllers
 
                 photo.Guid = imageGuid;
 
-                var oldBlob = AzureBlob(photo.Guid + "unprocessed");
+                var oldBlob = Azure.Blob(photo.Guid + "unprocessed");
                 //oldBlob.StartCopyAsync()
                 await oldBlob.UploadFromStreamAsync(file.OpenReadStream());
 
@@ -113,7 +114,7 @@ namespace slogram.Controllers
             using (var db = new MvcPhotoContext())
             {
                 var photo = db.Find<Photo>(photoId);
-                var oldBlob = AzureBlob(photo.Guid + "unprocessed");
+                var oldBlob = Azure.Blob(photo.Guid + "unprocessed");
                 await oldBlob.DownloadToFileAsync(savedImageFullPath, FileMode.Create);
 
                 using (Image<Rgba32> image = Image.Load(savedImageFullPath))
@@ -123,7 +124,7 @@ namespace slogram.Controllers
                     image.Save(processedFullPath); // Automatic encoder selected based on extension.
                 }
 
-                var newBlob = AzureBlob(photo.Guid + "processed");
+                var newBlob = Azure.Blob(photo.Guid + "processed");
                 await newBlob.UploadFromFileAsync(processedFullPath);
 
                 photo.ProcessedUrl = newBlob.StorageUri.PrimaryUri.AbsoluteUri;
@@ -133,13 +134,7 @@ namespace slogram.Controllers
             }
         }
 
-        public static CloudBlockBlob AzureBlob(string blobpath)  {
-            var cloudStorageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("storageconnectionstring"));
-            var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
 
-            var container = cloudBlobClient.GetContainerReference("slogramblobcontainer");
-            return container.GetBlockBlobReference(blobpath);
-        }
 
         // GET: Photos/Edit/5
         public async Task<IActionResult> Edit(int? id)
